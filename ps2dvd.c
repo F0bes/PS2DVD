@@ -274,6 +274,7 @@ int main(void)
 	EnableIntc(INTC_VBLANK_S);
 	while (1)
 	{
+		set_texregs(); // Just for the sake of switching renderers in PCSX2
 		call_microprogram(100);
 		WaitSema(vsync_sema);
 	}
