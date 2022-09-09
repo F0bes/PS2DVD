@@ -1,0 +1,95 @@
+.vu
+.align 4
+.global vu_init_start
+.global vu_init_end
+.global vu_frame_start
+.global vu_frame_end
+
+; VF01 current X | current Y
+; VF02 maxX | maxY
+; VF03 minX | minY
+; VF04 curDir
+; VF05 temp
+; VF06 -1
+; VF07 sprite width/height
+; VF08 temp
+; VF09 temp
+; VF10 curColour
+
+vu_init_start:
+NOP							LOI   43
+ADDI.x VF05, VF05, I		NOP
+NOP							RINIT R, VF05x
+; Set curDir to 1
+ADDw.xyzw VF04, VF00, VF00	LOI   520 
+; Set maxX to 520 (640 - 120) 
+ADDI.x VF02, VF00, I		LOI   396
+; Set maxY to 397 (448 - 51)
+ADDI.y VF02, VF00, I		NOP
+; Set minX to 1
+ADDw.x VF03, VF00, VF00		RNEXT.y VF05, R
+; Set minY to 0
+ADD.y VF03, VF00, Vf00		RNEXT.x VF05, R
+; Set the current position to a random location
+NOP							LOI 250
+MULI.xy VF05, VF05, I		LOI 1
+SUBI.xy VF08, VF02, I		NOP
+MINI.xy VF10, VF08, VF05	LOI 1
+ADDI.xy VF08, VF03, I		RNEXT.x VF09, R
+MAX.xy VF01, VF10, VF08		RNEXT.y VF09, R
+FTOI0 VF01, VF01			RNEXT.z VF09, R
+ITOF0 VF01, VF01			NOP
+NOP							LOI -1
+ADDI.xy VF06, VF00, I		LOI 128
+ADDI.x VF07, VF00, I		LOI 64
+ADDi[e].y VF07, VF00, I		NOP
+NOP							NOP
+vu_init_end:
+
+vu_frame_start:
+NOP							IADDIU VI01, VI00, 1234
+NOP							IADDIU VI05, VI00, 5
+NOP							NOP
+ADD.xy VF01, VF01, VF04 	NOP
+
+;Check if our position has reached our minimum / maximum
+	SUB.xy VF00, VF01, VF02		IADDIU VI01, VI00, 8
+	NOP							IADDIU VI02, VI00, 4
+	SUB.xy VF00, VF01, VF03		NOP
+	NOP							NOP
+	NOP							FMAND VI03, VI01
+	NOP							FMAND VI04, VI02
+	NOP							FMAND VI05, VI01
+	NOP							FMAND VI06, VI02
+	NOP							IOR   VI03, VI03, VI05
+	NOP							IOR   VI04, VI04, VI06
+	NOP							IBEQ  VI03, VI00, X_NOT_MIN_MAX
+	NOP							NOP
+	MUL.x VF04, VF04, VF06		RNEXT.x VF09, R
+	NOP							RNEXT.y VF09, R
+	NOP							RNEXT.z VF09, R
+X_NOT_MIN_MAX:
+	NOP							IBEQ    VI04, VI00, Y_NOT_MIN_MAX
+	NOP							NOP
+	MUL.y VF04, VF04, VF06		RNEXT.x VF09, R
+	NOP							RNEXT.y VF09, R
+	NOP							RNEXT.z VF09, R
+Y_NOT_MIN_MAX:
+
+; Set up xyz, scale up our RGB
+ADD VF05, VF01, VF07		NOP
+FTOI4.xyz VF08, VF01		NOP
+FTOI4.xyz VF05, VF05		NOP
+NOP							LOI 255
+MULI.xy VF10, VF09, I		NOP
+
+; Write our colour and cords into vu memory and kick it
+FTOI0.xyz VF10, VF10		NOP
+NOP							SQ.xyz VF08, 7(VI00)
+NOP							SQ.xyz VF05, 9(VI00)
+NOP							SQ.xyz VF09, 5(VI00)
+NOP							NOP
+NOP							XGKICK VI00 
+NOP[e]						NOP
+NOP							NOP
+vu_frame_end:

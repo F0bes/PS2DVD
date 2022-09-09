@@ -1,5 +1,5 @@
 EE_BIN ?= ps2dvd.elf
-EE_OBJS = ps2dvd.o tex/dvd_tex.c
+EE_OBJS = ps2dvd.o tex/dvd_tex.o microprogram.o
 EE_LIBS = -lkernel -lgraph -lpacket -ldma -ldraw
 
 EE_DVP = dvp-as
@@ -18,8 +18,7 @@ tex/dvd_tex.c: tex/dvd_tex.raw
 	$(EE_DVP) $< -o $@
 
 clean:
-	$(MAKE) -C sysman clean
-	rm -f $(EE_BIN_RESET) $(EE_BIN_NORESET) $(EE_OBJS) $(IRX_C_FILES)
+	rm -f $(EE_OBJS) $(EE_BIN)
 
 run: $(EE_BIN)
 	ps2client execee host:$(EE_BIN)
